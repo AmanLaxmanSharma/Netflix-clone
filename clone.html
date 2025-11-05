@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflux - Watch Movies & TV Shows</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #141414;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px 50px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 10%, transparent);
+            transition: background-color 0.3s ease;
+        }
+
+        .header.scrolled {
+            background-color: #141414;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e50914;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #b3b3b3;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .profile-pic {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background: linear-gradient(45deg, #e50914, #f40612);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect fill="%23222" width="1200" height="800"/><rect fill="%23333" x="100" y="100" width="200" height="300"/><rect fill="%23444" x="350" y="150" width="200" height="250"/><rect fill="%23555" x="600" y="200" width="200" height="200"/><rect fill="%23666" x="850" y="120" width="200" height="280"/><text x="600" y="450" font-family="Arial" font-size="48" fill="%23fff" text-anchor="middle">Featured Movie</text></svg>');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            padding: 0 50px;
+        }
+
+        .hero-content {
+            max-width: 500px;
+            margin-left: 50px;
+        }
+
+        .hero-title {
+            font-size: 64px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .hero-description {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: white;
+            color: black;
+        }
+
+        .btn-primary:hover {
+            background-color: rgba(255,255,255,0.8);
+        }
+
+        .btn-secondary {
+            background-color: rgba(109,109,110,0.7);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(109,109,110,0.5);
+        }
+
+        /* Content Sections */
+        .content {
+            padding: 50px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .movie-row {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .movie-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .movie-card {
+            min-width: 200px;
+            height: 300px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #333, #555);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+        }
+
+        .movie-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(229,9,20,0.1) 0%, 
+                rgba(244,6,18,0.2) 50%, 
+                rgba(229,9,20,0.1) 100%);
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Generate different colors for movie cards */
+        .movie-card:nth-child(1) { background: linear-gradient(135deg, #e50914, #f40612); }
+        .movie-card:nth-child(2) { background: linear-gradient(135deg, #0f79af, #1e90ff); }
+        .movie-card:nth-child(3) { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+        .movie-card:nth-child(4) { background: linear-gradient(135deg, #10b981, #059669); }
+        .movie-card:nth-child(5) { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .movie-card:nth-child(6) { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .movie-card:nth-child(7) { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+
+        /* Footer */
+        .footer {
+            background-color: #000;
+            padding: 50px;
+            margin-top: 100px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-column h4 {
+            color: #737373;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: #737373;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .footer-column ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-bottom {
+            color: #737373;
+            font-size: 12px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 0 20px;
+                text-align: center;
+            }
+
+            .hero-content {
+                margin-left: 0;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-description {
+                font-size: 16px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .movie-card {
+                min-width: 150px;
+                height: 225px;
+            }
+
+            .footer-links {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <nav class="nav">
+            <a href="#" class="logo">NETFLUX</a>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">TV Shows</a></li>
+                <li><a href="#">Movies</a></li>
+                <li><a href="#">New & Popular</a></li>
+                <li><a href="#">My List</a></li>
+            </ul>
+            <div class="user-menu">
+                <div class="profile-pic">U</div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Stranger Things</h1>
+            <p class="hero-description">
+                When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary">
+                    ▶ Play
+                </button>
+                <button class="btn btn-secondary">
+                    ℹ More Info
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Content Sections -->
+    <main class="content">
+        <section class="section">
+            <h2 class="section-title">Trending Now</h2>
+            <div class="movie-row">
+                <div class="movie-card">The Crown</div>
+                <div class="movie-card">Ozark</div>
+                <div class="movie-card">The Witcher</div>
+                <div class="movie-card">Money Heist</div>
+                <div class="movie-card">Bridgerton</div>
+                <div class="movie-card">Squid Game</div>
+                <div class="movie-card">Wednesday</div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Netflix Originals</h2>
+            <div class="movie-row">
+                <div class="movie-card">House of Cards</div>
+                <div class="movie-card">Orange is the New Black</div>
+                <div class="movie-card">Narcos</div>
+                <div class="movie-card">The Queen's Gambit</div>
+                <div class="movie-card">Dark</div>
+                <div class="movie-card">Mindhunter</div>
+                <div class="movie-card">Russian Doll</div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Action & Adventure</h2>
+            <div class="movie-row">
+                <div class="movie-card">Extraction</div>
+                <div class="movie-card">6 Underground</div>
+                <div class="movie-card">The Old Guard</div>
+                <div class="movie-card">Army of the Dead</div>
+                <div class="movie-card">Red Notice</div>
+                <div class="movie-card">Thunder Force</div>
+                <div class="movie-card">The Gray Man</div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Comedies</h2>
+            <div class="movie-row">
+                <div class="movie-card">The Good Place</div>
+                <div class="movie-card">Schitt's Creek</div>
+                <div class="movie-card">Brooklyn Nine-Nine</div>
+                <div class="movie-card">Space Force</div>
+                <div class="movie-card">Emily in Paris</div>
+                <div class="movie-card">Never Have I Ever</div>
+                <div class="movie-card">The Umbrella Academy</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Questions? Contact us.</h4>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Account</a></li>
+                        <li><a href="#">Media Center</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <ul>
+                        <li><a href="#">Investor Relations</a></li>
+                        <li><a href="#">Jobs</a></li>
+                        <li><a href="#">Ways to Watch</a></li>
+                        <li><a href="#">Terms of Use</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <ul>
+                        <li><a href="#">Privacy</a></li>
+                        <li><a href="#">Cookie Preferences</a></li>
+                        <li><a href="#">Corporate Information</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <ul>
+                        <li><a href="#">Speed Test</a></li>
+                        <li><a href="#">Legal Notices</a></li>
+                        <li><a href="#">Only on Netflix</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Netflux, Inc. This is a clone for educational purposes.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Movie card click effects
+        document.querySelectorAll('.movie-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 10px 30px rgba(0,0,0,0.8)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.boxShadow = 'none';
+            });
+            
+            card.addEventListener('click', function() {
+                alert(`Playing: ${this.textContent}`);
+            });
+        });
+
+        // Hero buttons functionality
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            alert('Playing Stranger Things...');
+        });
+
+        document.querySelector('.btn-secondary').addEventListener('click', function() {
+            alert('More info about Stranger Things would be displayed here.');
+        });
+
+        // Smooth scrolling for movie rows
+        document.querySelectorAll('.movie-row').forEach(row => {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            row.addEventListener('mousedown', (e) => {
+                isDown = true;
+                startX = e.pageX - row.offsetLeft;
+                scrollLeft = row.scrollLeft;
+            });
+
+            row.addEventListener('mouseleave', () => {
+                isDown = false;
+            });
+
+            row.addEventListener('mouseup', () => {
+                isDown = false;
+            });
+
+            row.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - row.offsetLeft;
+                const walk = (x - startX) * 2;
+                row.scrollLeft = scrollLeft - walk;
+            });
+        });
+
+        // Add loading animation on page load
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.movie-card').forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('loading');
+                    setTimeout(() => {
+                        card.classList.remove('loading');
+                    }, 1000);
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
